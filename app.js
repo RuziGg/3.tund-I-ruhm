@@ -86,7 +86,11 @@
 		 var title = document.querySelector('.title').value;
 		 var ingredients = document.querySelector('.ingredients').value;
 		 
-		 console.log(title + '' + ingredients);
+		 //console.log(title + '' + ingredients);
+		 //1. tekitan uue Jar'i
+		 var new_jar = new Jar(title, ingredients);
+		 //2. lisan selle htmli listi juurde
+		 document.querySelector('.list-of-jars').appendChild(new_jar.createHtmlElement());
 		 
 		 this.click_count++;
 		 console.log(this.click_count);
@@ -154,10 +158,10 @@
 		   
 		   li.appendChild(span);
 		   
-		   span_with_content = document.createElement('span');
+		   var span_with_content = document.createElement('span');
 		   span_with_content.className = 'content';
 		   
-		   content = document.createTextNode(this.title + ' | ' + this.ingredients);
+		   var content = document.createTextNode(this.title + ' | ' + this.ingredients);
 		   span_with_content.appendChild(content);
 		   
 		   li.appendChild(span_with_content);
