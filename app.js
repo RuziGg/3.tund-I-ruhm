@@ -19,6 +19,9 @@
      this.click_count = 0;
      this.currentRoute = null;
      console.log(this);
+	 
+	 // hakkan hoidma koiki purke
+	 this.jars = [];
 
      // Kui tahan Moosipurgile referenci siis kasutan THIS = MOOSIPURGI RAKENDUS ISE
      this.init();
@@ -68,16 +71,58 @@
 		   //esimesel kaivitamisel vaatame urli ule ja uuendame menuud
 	   this.routeChange();
 	   }
+	   
+	   //saan katte purgid localStorage kui on
+	   if(localStorage.jars){
+		   //vottan stringi ja teen tagasi objektideks
+		   this.jars = JSON.parse(localStorage.jars);
+		   console.log('laadisin localStorageist massiivi' + this.jars.length);
+		   
+		   //tekitan loendi htmli
+		   this.jars.forEach(function(jar){
+			  var new_jar = new Jar(jar.title, jar.ingredients);
+			  
+			  var li = new_jar.createHtmlElement();
+			  document.querySelector('.list-of-jars').appendChild(li);
+		   });
+		   }
 
        // esimene loogika oleks see, et kuulame hiireklikki nupul
-       this.bindMouseEvents();
+       this.bindEvents();
 
      },
 
-     bindMouseEvents: function(){
+     bindEvents: function(){
        document.querySelector('.add-new-jar').addEventListener('click', this.addNewClick.bind(this));
-
+	   //kuulan trukkimist otsikastis
+	   document.querySelector('#search').addEventListener('keyup', this.search.bind(this));
      },
+	 
+	 search: function(event){
+		 //otsikasti vaartust
+		 var needle = document.querySelector('#search').value.toLowerCase();
+		 console.log(needle);
+		 
+		 var list = document.querySelectorAll('ul.list-of-jars li');
+		 console.log(list);
+		 
+		 for(var i = 0; i < list.length; i++){
+			 
+			 var li = list[i];
+			 
+			 //uhel listitemi sisu tekst
+			 var stack = li.querySelector('.content').innerHTML.toLowerCase();
+			 
+			 //kas otsisona on sisus olemas
+			 if(stack.indexOf(needle) !== -1){
+				 //olemas
+				 li.style.display = 'list-item';
+			 }else{
+				 //ei ole, index on -1
+				 li.style.display = 'none';
+			 }
+		 };
+	 },
 
      addNewClick: function(event){
 		 //salvestame purgi
@@ -89,6 +134,13 @@
 		 //console.log(title + '' + ingredients);
 		 //1. tekitan uue Jar'i
 		 var new_jar = new Jar(title, ingredients);
+		 
+		 // lisan massiivi purgi
+		 this.jars.push(new_jar);
+		 console.log(JSON.stringify(this.jars));
+		 //JSONi stringina salvestan localStorageisse
+		 localStorage.setItem('jars', JSON.stringify(this.jars));
+		 
 		 //2. lisan selle htmli listi juurde
 		 document.querySelector('.list-of-jars').appendChild(new_jar.createHtmlElement());
 		 
