@@ -123,6 +123,7 @@
 			 }
 		 };
 	 },
+	 
 
      addNewClick: function(event){
 		 //salvestame purgi
@@ -221,6 +222,12 @@
 		   return li;
 	   }
    };
+   
+   /*var button=document.getElementsByTagName('button')[0];
+   var select=document.getElementsByTagName('list-of-jars')[0];
+   button.onclick=function(){
+	   select.removeChild(select.options[select.selectedIndex]);
+	};*/
 
    // kui leht laetud käivitan Moosipurgi rakenduse
    window.onload = function(){
