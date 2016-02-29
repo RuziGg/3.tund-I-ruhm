@@ -19,9 +19,9 @@
      this.click_count = 0;
      this.currentRoute = null;
      console.log(this);
-	 
-	 // hakkan hoidma koiki purke
-	 this.jars = [];
+
+     // hakkan hoidma kõiki purke
+     this.jars = [];
 
      // Kui tahan Moosipurgile referenci siis kasutan THIS = MOOSIPURGI RAKENDUS ISE
      this.init();
@@ -40,11 +40,12 @@
        'render': function(){
          // käivitame siis kui lehte laeme
          console.log('>>>>loend');
-		 
-		 //simulatsioon laeb kaua
-		 window.setTimeout(function(){
-			 document.querySelector('.loading').innerHTML = 'Laetud!';
-		 }, 3000);
+
+         //simulatsioon laeb kaua
+         window.setTimeout(function(){
+           document.querySelector('.loading').innerHTML = 'laetud!';
+         }, 3000);
+
        }
      },
      'manage-view': {
@@ -62,91 +63,155 @@
 
        //kuulan aadressirea vahetust
        window.addEventListener('hashchange', this.routeChange.bind(this));
-	   
-	   //kui aadressireal ei ole hashi siis lisan juurde
-	   if(!window.location.hash){
-		   window.location.hash = 'home-view';
-		   //routechange siin ei ole sees vaja, sest kasitsi muutmine kaivitab routechange
-	   }else{
-		   //esimesel kaivitamisel vaatame urli ule ja uuendame menuud
-	   this.routeChange();
-	   }
-	   
-	   //saan katte purgid localStorage kui on
-	   if(localStorage.jars){
-		   //vottan stringi ja teen tagasi objektideks
-		   this.jars = JSON.parse(localStorage.jars);
-		   console.log('laadisin localStorageist massiivi' + this.jars.length);
-		   
-		   //tekitan loendi htmli
-		   this.jars.forEach(function(jar){
-			  var new_jar = new Jar(jar.title, jar.ingredients);
-			  
-			  var li = new_jar.createHtmlElement();
-			  document.querySelector('.list-of-jars').appendChild(li);
-		   });
-		   }
 
-       // esimene loogika oleks see, et kuulame hiireklikki nupul
-       this.bindEvents();
+       // kui aadressireal ei ole hashi siis lisan juurde
+       if(!window.location.hash){
+         window.location.hash = 'home-view';
+         // routechange siin ei ole vaja sest käsitsi muutmine käivitab routechange event'i ikka
+       }else{
+         //esimesel käivitamisel vaatame urli üle ja uuendame menüüd
+         this.routeChange();
+       }
+
+       //saan kätte purgid localStorage kui on
+       if(localStorage.jars){
+           //võtan stringi ja teen tagasi objektideks
+           //this.jars = JSON.parse(localStorage.jars);
+           //console.log('laadisin localStorageist massiiivi ' + this.jars.length);
+
+           this.createListFromArray(JSON.parse(localStorage.jars));
+
+           console.log('laadisin localStorageist');
+
+       }else{
+
+         //ei olnud localStorageit olemas, teen päringu serverisse
+
+         var xhttp = new XMLHttpRequest();
+
+         // vahetub siis kui toimub muutus ühenduses
+         xhttp.onreadystatechange = function() {
+
+           //console.log(xhttp.readyState);
+
+           //fail jõudis tervenisti kohale
+           if (xhttp.readyState == 4 && xhttp.status == 200) {
+
+             var result =JSON.parse(xhttp.responseText);
+             //console.log(result);
+
+             // NB ! saab viidata MOOSIPURGILE ka Moosipurk.instance
+
+             Moosipurk.instance.createListFromArray(result);
+
+             console.log('laadisin serverist');
+
+           }
+         };
+
+         //päringu tegemine
+         xhttp.open("GET", "saveData.php", true);
+         xhttp.send();
+
+
+       }
+
 
      },
 
+     createListFromArray: function(arrayOfObjects){
+
+       this.jars = arrayOfObjects;
+
+       //tekitan loendi htmli
+       this.jars.forEach(function(jar){
+
+           var new_jar = new Jar(jar.title, jar.ingredients);
+
+           var li = new_jar.createHtmlElement();
+           document.querySelector('.list-of-jars').appendChild(li);
+
+       });
+
+
+      // esimene loogika oleks see, et kuulame hiireklikki nupul
+      this.bindEvents();
+
+     },
      bindEvents: function(){
        document.querySelector('.add-new-jar').addEventListener('click', this.addNewClick.bind(this));
-	   //kuulan trukkimist otsikastis
-	   document.querySelector('#search').addEventListener('keyup', this.search.bind(this));
+
+       //kuulan trükkimist otsikastis
+       document.querySelector('#search').addEventListener('keyup', this.search.bind(this));
+
      },
-	 
-	 search: function(event){
-		 //otsikasti vaartust
-		 var needle = document.querySelector('#search').value.toLowerCase();
-		 console.log(needle);
-		 
-		 var list = document.querySelectorAll('ul.list-of-jars li');
-		 console.log(list);
-		 
-		 for(var i = 0; i < list.length; i++){
-			 
-			 var li = list[i];
-			 
-			 //uhel listitemi sisu tekst
-			 var stack = li.querySelector('.content').innerHTML.toLowerCase();
-			 
-			 //kas otsisona on sisus olemas
-			 if(stack.indexOf(needle) !== -1){
-				 //olemas
-				 li.style.display = 'list-item';
-			 }else{
-				 //ei ole, index on -1
-				 li.style.display = 'none';
-			 }
-		 };
-	 },
-	 
+
+     search: function(event){
+         //otsikasti väärtus
+         var needle = document.querySelector('#search').value.toLowerCase();
+         console.log(needle);
+
+         var list = document.querySelectorAll('ul.list-of-jars li');
+         console.log(list);
+
+         for(var i = 0; i < list.length; i++){
+
+             var li = list[i];
+
+             // ühe listitemi sisu tekst
+             var stack = li.querySelector('.content').innerHTML.toLowerCase();
+
+             //kas otsisõna on sisus olemas
+             if(stack.indexOf(needle) !== -1){
+                 //olemas
+                 li.style.display = 'list-item';
+
+             }else{
+                 //ei ole, index on -1, peidan
+                 li.style.display = 'none';
+
+             }
+
+         }
+     },
 
      addNewClick: function(event){
-		 //salvestame purgi
-		 //console.log(event);
-		 
-		 var title = document.querySelector('.title').value;
-		 var ingredients = document.querySelector('.ingredients').value;
-		 
-		 //console.log(title + '' + ingredients);
-		 //1. tekitan uue Jar'i
-		 var new_jar = new Jar(title, ingredients);
-		 
-		 // lisan massiivi purgi
-		 this.jars.push(new_jar);
-		 console.log(JSON.stringify(this.jars));
-		 //JSONi stringina salvestan localStorageisse
-		 localStorage.setItem('jars', JSON.stringify(this.jars));
-		 
-		 //2. lisan selle htmli listi juurde
-		 document.querySelector('.list-of-jars').appendChild(new_jar.createHtmlElement());
-		 
-		 this.click_count++;
-		 console.log(this.click_count);
+       //salvestame purgi
+       //console.log(event);
+
+       var title = document.querySelector('.title').value;
+       var ingredients = document.querySelector('.ingredients').value;
+
+       //console.log(title + ' ' + ingredients);
+       //1) tekitan uue Jar'i
+       var new_jar = new Jar(title, ingredients);
+
+       //lisan massiiivi purgi
+       this.jars.push(new_jar);
+       console.log(JSON.stringify(this.jars));
+       // JSON'i stringina salvestan localStorage'isse
+       localStorage.setItem('jars', JSON.stringify(this.jars));
+
+       //salvestan serverisse
+       var xhttp = new XMLHttpRequest();
+       xhttp.onreadystatechange = function() {
+         if (xhttp.readyState == 4 && xhttp.status == 200) {
+
+           console.log('salvestas serverisse');
+
+         }
+       };
+       console.log("saveData.php?title="+title+"&ingredients=" +ingredients);
+       xhttp.open("GET", "saveData.php?title="+title+"&ingredients=" +ingredients, true);
+       xhttp.send();
+
+
+
+
+       // 2) lisan selle htmli listi juurde
+       var li = new_jar.createHtmlElement();
+       document.querySelector('.list-of-jars').appendChild(li);
+
 
      },
 
@@ -155,18 +220,19 @@
        //kirjutan muuutujasse lehe nime, võtan maha #
        this.currentRoute = location.hash.slice(1);
        console.log(this.currentRoute);
-	   
-	   //kas meil on selline leht olemas?
-	   if(this.routes[this.currentRoute]){
-		   
-		   //muudan menüü lingi aktiivseks
-		   this.updateMenu();
-		   
-		   this.routes[this.currentRoute].render();
-	   
-	   }else{
-		   //404 - ei olnud
-	   }
+
+       //kas meil on selline leht olemas?
+       if(this.routes[this.currentRoute]){
+
+         //muudan menüü lingi aktiivseks
+         this.updateMenu();
+
+         this.routes[this.currentRoute].render();
+
+
+       }else{
+         /// 404 - ei olnud
+       }
 
 
      },
@@ -182,52 +248,48 @@
 
      }
 
-   }; //MOOSIPURGI LOPP
-   
-   var Jar = function(title, ingredients){
-	   this.title = title;
-	   this.ingredients = ingredients;
-	   console.log('created new jar');
+   }; // MOOSIPURGI LÕPP
+
+   var Jar = function(new_title, new_ingredients){
+     this.title = new_title;
+     this.ingredients = new_ingredients;
+     console.log('created new jar');
    };
-   
+
    Jar.prototype = {
-	   createHtmlElement: function(){
-		   //vottes title ja ingredients -> 
-		   /*
-		   li
-			span.letter
-				M<- title esimene taht
-			span.content
-				title / ingredients
-		   */
-		   
-		   var li = document.createElement('li');
-		   
-		   var span = document.createElement('span');
-		   span.className = 'letter';
-		   
-		   var letter = document.createTextNode(this.title.charAt(0));
-		   span.appendChild(letter);
-		   
-		   li.appendChild(span);
-		   
-		   var span_with_content = document.createElement('span');
-		   span_with_content.className = 'content';
-		   
-		   var content = document.createTextNode(this.title + ' | ' + this.ingredients);
-		   span_with_content.appendChild(content);
-		   
-		   li.appendChild(span_with_content);
-		   
-		   return li;
-	   }
+     createHtmlElement: function(){
+
+       // võttes title ja ingredients ->
+       /*
+       li
+        span.letter
+          M <- title esimene täht
+        span.content
+          title | ingredients
+       */
+
+       var li = document.createElement('li');
+
+       var span = document.createElement('span');
+       span.className = 'letter';
+
+       var letter = document.createTextNode(this.title.charAt(0));
+       span.appendChild(letter);
+
+       li.appendChild(span);
+
+       var span_with_content = document.createElement('span');
+       span_with_content.className = 'content';
+
+       var content = document.createTextNode(this.title + ' | ' + this.ingredients);
+       span_with_content.appendChild(content);
+
+       li.appendChild(span_with_content);
+
+       return li;
+
+     }
    };
-   
-   /*var button=document.getElementsByTagName('button')[0];
-   var select=document.getElementsByTagName('list-of-jars')[0];
-   button.onclick=function(){
-	   select.removeChild(select.options[select.selectedIndex]);
-	};*/
 
    // kui leht laetud käivitan Moosipurgi rakenduse
    window.onload = function(){
